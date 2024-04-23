@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Farmers Fruits</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+        }
+
+        .header {
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .cart {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #eee;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .cart-item span {
+            margin-right: 10px;
+        }
+
+        .user-info {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #eee;
+        }
+
+        .user-info label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .user-info input[type="text"],
+        .user-info input[type="number"] {
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+
+        .user-info button {
+            padding: 5px 10px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        .bill {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #eee;
+        }
+
+        .bill h3 {
+            margin-bottom: 10px;
+        }
+
+        .bill p {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Farmers Fruits</h1>
+    </div>
+    
+    <div class="cart">
+        <!-- Cart items will be dynamically added here -->
+    </div>
+
+    <div class="user-info">
+        <form onsubmit="handleSubmit(event)">
+            <label for="name">Name:</label>
+            <input type="text" id="name" required><br>
+            <label for="address">Address:</label>
+            <input type="text" id="address" required><br>
+            <label for="phone">Phone:</label>
+            <input type="text" id="phone" required><br>
+            <button type="submit">Place Order</button>
+        </form>
+    </div>
+
+    <div class="bill">
+        <!-- Bill details will be dynamically added here -->
+    </div>
+
+    <script>
+        let cart = [];
+
+        function addToCart(fruit, quantity) {
+            // Check if fruit is already in cart
+            const existingItem = cart.find(item => item.fruit === fruit);
+            if (existingItem) {
+                // If fruit is already in cart, update quantity
+                existingItem.quantity += quantity;
+            } else {
+                // If fruit is not in cart, add new item
+                cart.push({ fruit, quantity });
+            }
+            updateCart();
+        }
+
+        function updateCart() {
+            // Clear cart display
+            const cartDisplay = document.querySelector('.cart');
+            cartDisplay.innerHTML = '';
+
+            // Loop through cart items and display them
+            cart.forEach(item => {
+                const cartItem = document.createElement('div');
+                cartItem.classList.add('cart-item');
+                cartItem.innerHTML = `<span>${item.fruit}</span><span>${item.quantity}</span>`;
+                cartDisplay.appendChild(cartItem);
+            });
+
+            // Calculate total cart value and display it
+            const totalCartValue = cart.reduce((total, item) => {
+                const price = parseFloat(document.querySelector(`[data-fruit="${item.fruit}"]`).nextElementSibling.textContent);
+                return total + (price * item.quantity);
+            }, 0);
+            const totalCartValueDisplay = document.querySelector('.total-cart-value');
+            totalCartValueDisplay.textContent = `Total Cart Value: $${totalCartValue.toFixed(2)}`;
+        }
+
+        function calculateTotalPrice() {
+            // Get all the quantity inputs
+            const quantityInputs = document.querySelectorAll('.quantity-input');
+
+            // Initialize total price and quantity count
+            let totalPrice = 0;
+            let quantityCount = 0;
+
+            // Loop through all the quantity inputs and calculate total price
+            quantityInputs.forEach(input => {
+                const quantity = parseInt(input.value);
+                const price = parseFloat(input.nextElementSibling.textContent);
+                totalPrice += quantity * price;
+                quantityCount += quantity;
+            });
+
+            // Apply discount if quantity count is greater than or equal to 3:
+            let discount = 0;
+            if (quantityCount >= 3) {
+                discount = 0.2;
+            }
+
+            // Calculate final price and display it
+            const finalPrice = ((1 - discount) * totalPrice).toFixed(2);
+            const finalPriceDisplay = document.querySelector('.final-price');
+            finalPriceDisplay.textContent = `Final Price: $${finalPrice}`;
+        }
+
+        function handleQuantityChange(event) {
+            // Get the fruit and quantity from the input element's data attributes
+            const fruit = event.target.dataset.fruit;
+            const quantity = parseInt(event.target.value);
+
+            // Remove the item from the cart if quantity is 0
+            if (quantity === 0) {
+                cart = cart.filter(item => item.fruit !== fruit);
+            } else {
+                // Update the quantity of the item in the cart
+                const existingItem = cart.find(item => item.fruit === fruit);
+                if (existingItem) {
+                    existingItem.quantity = quantity;
+                }
+            }
+            updateCart();
+        }
+
+        function handleSubmit(event) {
+            event.preventDefault();
+
+            // Get user information from the form
+            const name = document.querySelector('#name').value;
+            const address = document.querySelector('#address').value;
+            const phone = document.querySelector('#phone').value;
+
+            // Display order confirmation message
+            const orderConfirmation = document.createElement('p');
+            orderConfirmation.textContent = `Thank you ${name} for placing your order. We will ship your items to ${address} and your phone number is ${phone}. Your order will be delivered in 3 hours.`;
+            document.body.appendChild(orderConfirmation);
+
+            // Generate bill
+            const bill = document.createElement('div');
+            bill.classList.add('bill');
+            bill.innerHTML = `<h3>Bill</h3><p>Name: ${name}</p><p>Address: ${address}</p><p>Phone: ${phone}</p>`;
+            document.body.appendChild(bill);
+
+            // Loop through cart items and add them to bill
+            cart.forEach(item => {
+                const cartItem = document.createElement('div');
+                cartItem.classList.add('cart-item');
+                cartItem.innerHTML = `<span>${item.fruit}</span><span>${item.quantity}</span>`;
+                bill.appendChild(cartItem);
+            });
+
+            // Calculate total cart value and add it to bill
+            const totalCartValue = cart.reduce((total, item) => {
+                const price = parseFloat(document.querySelector(`[data-fruit="${item.fruit}"]`).nextElementSibling.textContent);
+                return total + (price * item.quantity);
+            }, 0);
+            const totalCartValueDisplay = document.createElement('p');
+            totalCartValueDisplay.textContent = `Total Cart Value: $${totalCartValue.toFixed(2)}`;
+            bill.appendChild(totalCartValueDisplay);
+
+            // Calculate total price, discount, and final price and add them to bill
+            const quantityInputs = document.querySelectorAll('.quantity-input');
+            let totalPrice = 0;
+            let quantityCount = 0;
+            quantityInputs.forEach(input => {
+                const quantity = parseInt(input.value);
+                const price = parseFloat(input.nextElementSibling.textContent);
+                totalPrice += quantity * price;
+                quantityCount += quantity;
+            });
+            let discount = 0;
+            if (quantityCount > 2) {
+                discount = 0.2;
+            }
+            const discountPrice = (totalPrice * discount).toFixed(2);
+            const finalPrice = ((1 - discount) * totalPrice).toFixed(2);
+            const totalPriceDisplay = document.createElement('p');
+            const discountPriceDisplay = document.createElement('p');
+            const finalPriceDisplay = document.createElement('p');
+            totalPriceDisplay.textContent = `Total Price: $${totalPrice.toFixed(2)}`;
+            discountPriceDisplay.textContent = `Discount Price: $${discountPrice}`;
+            finalPriceDisplay.textContent = `Final Price: $${finalPrice}`; 
+            bill.appendChild(totalPriceDisplay);
+            bill.appendChild(discountPriceDisplay);
+            bill.appendChild(finalPriceDisplay);
+            
+            // Clear cart and form
+            cart = [];
+            document.querySelector('#name').value = '';
+            document.querySelector('#address').value = '';
+            document.querySelector('#phone').value = '';
+            updateCart();
+        }
+
+        // Sample Fruit Items
+        const fruits = [
+            { name: "Apple", price: 1.99 },
+            { name: "Banana", price: 0.59 },
+            { name: "Orange", price: 0.79 },
+            { name: "Grapes", price: 2.49 }
+        ];
+
+        // Display fruit items
+        const fruitList = document.createElement('ul');
+        fruits.forEach(fruit => {
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `${fruit.name}: $${fruit.price.toFixed(2)} <button onclick="addToCart('${fruit.name}', 1)">Add to Cart</button>`;
+            fruitList.appendChild(listItem);
+        });
+        document.body.appendChild(fruitList);
+    </script>
+</body>
+</html>
